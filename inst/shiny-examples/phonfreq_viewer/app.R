@@ -167,8 +167,8 @@ server = function(input, output) {
 
   # Get fitted distribution lines for input language
   #   Returns 100x5 data frame.
-  #   First row: sequence of length 100, from xmin to xmax
-  #   Other rows: gives P(X > x) for given value, for each fitted distribution
+  #   First col: sequence of length 100, from xmin to xmax
+  #   Other cols: gives P(X > x) for given value, for each fitted distribution
   all_lines <- reactive({
     df       <- dplyr::select(poweRlaw::lines(dist_pl(), draw = FALSE), freq = x, pl = y)
     df$lnorm <- poweRlaw::lines(dist_lnorm(), draw = FALSE)$y
@@ -258,7 +258,7 @@ server = function(input, output) {
       { cdf <- cdf + ggplot2::geom_line(ggplot2::aes(exp, colour = "Exponential", linetype = "Exponential"), data = all_lines_xmin()$exp,
                                size = 1, alpha = 0.8) }
       if ("pois" %in% input$select_lines)
-      { cdf <- cdf + ggplot2::geom_line(ggplot2::aes(pois + 0.0001, colour = "Poisson", linetype = "Poisson"), data = all_lines_xmin()$pois,
+      { cdf <- cdf + ggplot2::geom_line(ggplot2::aes(pois + 0.00001, colour = "Poisson", linetype = "Poisson"), data = all_lines_xmin()$pois,
                                size = 1, alpha = 0.8) }
     } else if (input$select_xmin == FALSE) {
       if ("pl" %in% input$select_lines)
@@ -271,7 +271,7 @@ server = function(input, output) {
       { cdf <- cdf + ggplot2::geom_line(ggplot2::aes(exp, colour = "Exponential", linetype = "Exponential"), data = all_lines(),
                                size = 1, alpha = 0.8) }
       if ("pois" %in% input$select_lines)
-      { cdf <- cdf + ggplot2::geom_line(ggplot2::aes(pois + 0.0001, colour = "Poisson", linetype = "Poisson"), data = all_lines(),
+      { cdf <- cdf + ggplot2::geom_line(ggplot2::aes(pois + 0.00001, colour = "Poisson", linetype = "Poisson"), data = all_lines(),
                                size = 1, alpha = 0.8) }
     }
   if (input$log_scale) {
