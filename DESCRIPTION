@@ -1,11 +1,26 @@
 Package: phonfreq
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Phoneme Frequency Distributions in Australian Languages
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Author@R: c(
+    person("Jayden", "Macklin-Cordes", email = "j.macklincordes@uq.edu.au", role = c("aut", "cre")),
+    person("Erich", "Round", role = "ctb"))
+BugReports: https://github.com/jaydenm-c/phonfreq/issues
+Description: This package provides a Shiny appp for viewing phoneme frequencies 
+    in Australian languages and plotting the fit of different distributions to 
+    each language.
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
+Depends: 
+    R (>= 2.10)
+Imports: 
+    cowplot,
+    ggplot2,
+    ggrepel,
+    grid,
+    poweRlaw,
+    shiny,
+    readr,
+    dplyr
+RoxygenNote: 7.1.1
