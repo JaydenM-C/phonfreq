@@ -131,14 +131,14 @@ server = function(input, output) {
 
   # Get df of segment frequencies in input language
   get_freqs <- reactive({
-    df <- filter(phonfreq::aus_frequencies, variety_name == input$select_language)
-    df$rank <- rank(desc(df$count), ties.method = "random")
+    df <- dplyr::filter(phonfreq::aus_frequencies, variety_name == input$select_language)
+    df$rank <- rank(dplyr::desc(df$count), ties.method = "random")
     df
   })
 
   # Get lex_ID of input language (returns character object) (helps select distribution objects)
   get_id <- reactive({
-    id_df <- filter(phonfreq::aus_metadata, variety_name == input$select_language)
+    id_df <- dplyr::filter(phonfreq::aus_metadata, variety_name == input$select_language)
     id <- as.character(id_df$lex_ID)
     id
   })
@@ -170,20 +170,20 @@ server = function(input, output) {
   #   First row: sequence of length 100, from xmin to xmax
   #   Other rows: gives P(X > x) for given value, for each fitted distribution
   all_lines <- reactive({
-    df       <- lines(dist_pl(), draw = FALSE) %>% dplyr::dplyr::select(freq = x, pl = y)
-    df$lnorm <- lines(dist_lnorm(), draw = FALSE)$y
-    df$exp   <- lines(dist_exp(), draw = FALSE)$y
-    df$pois  <- lines(dist_pois(), draw = FALSE)$y
+    df       <- dplyr::select(poweRlaw::lines(dist_pl(), draw = FALSE), freq = x, pl = y)
+    df$lnorm <- poweRlaw::lines(dist_lnorm(), draw = FALSE)$y
+    df$exp   <- poweRlaw::lines(dist_exp(), draw = FALSE)$y
+    df$pois  <- poweRlaw::lines(dist_pois(), draw = FALSE)$y
     df
   })
 
   # Get list of fitted distribution lines for input language
   # Have to return list where each element is a separate df because xmin differs between distributions
   all_lines_xmin <- reactive({
-    list(pl    = lines(dist_pl_xmin(), draw = FALSE) %>% dplyr::select(freq = x, pl = y),
-         lnorm = lines(dist_lnorm_xmin(), draw = FALSE) %>% dplyr::select(freq = x, lnorm = y),
-         exp   = lines(dist_exp_xmin(), draw = FALSE) %>% dplyr::select(freq = x, exp = y),
-         pois  = lines(dist_pois_xmin(), draw = FALSE) %>% dplyr::select(freq = x, pois = y))
+    list(pl    = dplyr::select(poweRlaw::lines(dist_pl_xmin(), draw = FALSE), freq = x, pl = y),
+         lnorm = dplyr::select(poweRlaw::lines(dist_lnorm_xmin(), draw = FALSE), freq = x, lnorm = y),
+         exp   = dplyr::select(poweRlaw::lines(dist_exp_xmin(), draw = FALSE), freq = x, exp = y),
+         pois  = dplyr::select(poweRlaw::lines(dist_pois_xmin(), draw = FALSE), freq = x, pois = y))
   })
 
   # Generate main section header
@@ -196,91 +196,91 @@ server = function(input, output) {
 
   # Histogram of phoneme frequencies in input language
   freq_plot <- reactive({
-    ggplot(get_freqs(),
-           aes(x = reorder(match,-count), y = freq)) +
-      geom_col(fill = "tomato3") +
-      xlab(paste(input$select_language, "phonemes")) +
-      ylab("Phoneme frequency") +
-      theme_cowplot()
+    ggplot2::ggplot(get_freqs(),
+           ggplot2::aes(x = reorder(match,-count), y = freq)) +
+      ggplot2::geom_col(fill = "tomato3") +
+      ggplot2::xlab(paste(input$select_language, "phonemes")) +
+      ggplot2::ylab("Phoneme frequency") +
+      cowplot::theme_cowplot()
   })
 
   # Phoneme frequencies with log-scaled x and y axes.
   loglog_plot <- reactive({
     # Generate base loglog plot
-    ll_plot <- ggplot(get_freqs(), aes(x = rank, y = freq)) +
-                geom_point(size = 1.5) +
-                xlab("Freqency rank (log)") +
-                ylab("Phoneme frequency (log)") +
-                scale_x_log10() +
-                scale_y_log10() +
-                theme_cowplot()
+    ll_plot <- ggplot2::ggplot(get_freqs(), ggplot2::aes(x = rank, y = freq)) +
+                ggplot2::geom_point(size = 1.5) +
+                ggplot2::xlab("Freqency rank (log)") +
+                ggplot2::ylab("Phoneme frequency (log)") +
+                ggplot2::scale_x_log10() +
+                ggplot2::scale_y_log10() +
+                cowplot::theme_cowplot()
     # Optionally add lm
     if (input$select_lm) {
-      ll_plot <- ll_plot + geom_smooth(method = "lm", colour = "#1f78b4", fill = "#a6cee3", alpha = 0.2, size = 0.5)
+      ll_plot <- ll_plot + ggplot2::geom_smooth(method = "lm", colour = "#1f78b4", fill = "#a6cee3", alpha = 0.2, size = 0.5)
     }
     # Optionally add phoneme labels
     if (input$select_labels) {
-      ll_plot <- ll_plot + geom_text_repel(aes(label = match), nudge_x = .03, nudge_y = .03, size = 5, segment.alpha = 0.5)
+      ll_plot <- ll_plot + ggrepel::geom_text_repel(ggplot2::aes(label = match), nudge_x = .03, nudge_y = .03, size = 5, segment.alpha = 0.5)
     }
     ll_plot
   })
 
   output$frequency_plot <- renderPlot({
-    cowplot;;plot_grid(freq_plot(), loglog_plot(), labels = NULL)
+    cowplot::plot_grid(freq_plot(), loglog_plot(), labels = NULL)
   })
 
   # Plot theoretical vs empirical CDF
   cdf_plot <- reactive({
-    obs <- plot(dist_pl(), draw = F)
+    obs <- poweRlaw::plot(dist_pl(), draw = F)
     colnames(obs) <- c("freq", "p")
-    cdf <- ggplot(all_lines(), aes(y = freq)) +
-      geom_point(data = obs, aes(x = p, y = freq), size = 1.5) +
-      xlab("P(X ≥ x)") +
-      ylab("Phoneme frequency") +
-      scale_colour_manual(name = "Distributions", values = c("Power law" = "#6a3d9a",
+    cdf <- ggplot2::ggplot(all_lines(), ggplot2::aes(y = freq)) +
+      ggplot2::geom_point(data = obs, ggplot2::aes(x = p, y = freq), size = 1.5) +
+      ggplot2::xlab("P(X ≥ x)") +
+      ggplot2::ylab("Phoneme frequency") +
+      ggplot2::scale_colour_manual(name = "Distributions", values = c("Power law" = "#6a3d9a",
                                                              "Lognormal" = "#a6cee3",
                                                              "Exponential" = "#fb9a99",
                                                              "Poisson" = "#33a02c")) +
-      scale_linetype_manual(name = "Distributions", values = c("Power law" = "solid",
+      ggplot2::scale_linetype_manual(name = "Distributions", values = c("Power law" = "solid",
                                                                "Lognormal" = "twodash",
                                                                "Exponential" = "longdash",
                                                                "Poisson" = "dotted")) +
-      theme_cowplot()
+      cowplot::theme_cowplot()
 
     if (input$select_xmin) {
       if ("pl" %in% input$select_lines)
-      { cdf <- cdf + geom_line(aes(pl, colour = "Power law", linetype = "Power law"), data = all_lines_xmin()$pl,
+      { cdf <- cdf + ggplot2::geom_line(ggplot2::aes(pl, colour = "Power law", linetype = "Power law"), data = all_lines_xmin()$pl,
                                size = 1, alpha = 0.8) }
       if ("ln" %in% input$select_lines)
-      { cdf <- cdf + geom_line(aes(lnorm, colour = "Lognormal", linetype = "Lognormal"), data = all_lines_xmin()$lnorm,
+      { cdf <- cdf + ggplot2::geom_line(ggplot2::aes(lnorm, colour = "Lognormal", linetype = "Lognormal"), data = all_lines_xmin()$lnorm,
                                size = 1, alpha = 0.8) }
       if ("exp" %in% input$select_lines)
-      { cdf <- cdf + geom_line(aes(exp, colour = "Exponential", linetype = "Exponential"), data = all_lines_xmin()$exp,
+      { cdf <- cdf + ggplot2::geom_line(ggplot2::aes(exp, colour = "Exponential", linetype = "Exponential"), data = all_lines_xmin()$exp,
                                size = 1, alpha = 0.8) }
       if ("pois" %in% input$select_lines)
-      { cdf <- cdf + geom_line(aes(pois + 0.0001, colour = "Poisson", linetype = "Poisson"), data = all_lines_xmin()$pois,
+      { cdf <- cdf + ggplot2::geom_line(ggplot2::aes(pois + 0.0001, colour = "Poisson", linetype = "Poisson"), data = all_lines_xmin()$pois,
                                size = 1, alpha = 0.8) }
     } else if (input$select_xmin == FALSE) {
       if ("pl" %in% input$select_lines)
-      { cdf <- cdf + geom_line(aes(pl, colour = "Power law", linetype = "Power law"), data = all_lines(),
+      { cdf <- cdf + ggplot2::geom_line(ggplot2::aes(pl, colour = "Power law", linetype = "Power law"), data = all_lines(),
                                size = 1, alpha = 0.8) }
       if ("ln" %in% input$select_lines)
-      { cdf <- cdf + geom_line(aes(lnorm, colour = "Lognormal", linetype = "Lognormal"), data = all_lines(),
+      { cdf <- cdf + ggplot2::geom_line(ggplot2::aes(lnorm, colour = "Lognormal", linetype = "Lognormal"), data = all_lines(),
                                size = 1, alpha = 0.8) }
       if ("exp" %in% input$select_lines)
-      { cdf <- cdf + geom_line(aes(exp, colour = "Exponential", linetype = "Exponential"), data = all_lines(),
+      { cdf <- cdf + ggplot2::geom_line(ggplot2::aes(exp, colour = "Exponential", linetype = "Exponential"), data = all_lines(),
                                size = 1, alpha = 0.8) }
       if ("pois" %in% input$select_lines)
-      { cdf <- cdf + geom_line(aes(pois + 0.0001, colour = "Poisson", linetype = "Poisson"), data = all_lines(),
+      { cdf <- cdf + ggplot2::geom_line(ggplot2::aes(pois + 0.0001, colour = "Poisson", linetype = "Poisson"), data = all_lines(),
                                size = 1, alpha = 0.8) }
     }
   if (input$log_scale) {
     cdf <- cdf +
-      coord_trans(x = "log", y = "log") +
-      scale_x_continuous(breaks = c(0.05, 0.1, 0.25, 0.5, 0.75, 1),
+      ggplot2::coord_trans(x = "log", y = "log") +
+      ggplot2::scale_x_continuous(breaks = c(0.05, 0.1, 0.25, 0.5, 0.75, 1),
                          limits = c(0.04,1.1))
   } else {
-    cdf <- cdf + scale_x_continuous(breaks = c(0.25, 0.5, 0.75, 1),
+    cdf <- cdf + ggplot2::scale_x_continuous(breaks = c(0.25, 0.5, 0.75, 1),
                                     limits = c(0,1))
   }
     cdf
@@ -290,35 +290,35 @@ server = function(input, output) {
 
   # Plot parameter uncertainty estimates via bootstrapping
   output$bs_pl <- renderPlot({
-    plot(dist_pl_bs())
+    poweRlaw::plot(dist_pl_bs())
   })
 
   output$bs_lnorm <- renderPlot({
-    plot(dist_lnorm_bs())
+    poweRlaw::plot(dist_lnorm_bs())
   })
 
   output$bs_exp <- renderPlot({
-    plot(dist_exp_bs())
+    poweRlaw::plot(dist_exp_bs())
   })
 
   output$bs_pois <- renderPlot({
-    plot(dist_pois_bs())
+    poweRlaw::plot(dist_pois_bs())
   })
 
   output$bs_pl_xmin <- renderPlot({
-    plot(dist_pl_xmin_bs())
+    poweRlaw::plot(dist_pl_xmin_bs())
   })
 
   output$bs_lnorm_xmin <- renderPlot({
-    plot(dist_lnorm_xmin_bs())
+    poweRlaw::plot(dist_lnorm_xmin_bs())
   })
 
   output$bs_exp_xmin <- renderPlot({
-    plot(dist_exp_xmin_bs())
+    poweRlaw::plot(dist_exp_xmin_bs())
   })
 
   output$bs_pois_xmin <- renderPlot({
-    plot(dist_pois_xmin_bs())
+    poweRlaw::plot(dist_pois_xmin_bs())
   })
 
 }
