@@ -17,7 +17,7 @@ You can install phonfreq from
 
 ``` r
 # install.packages("devtools")
-devtools::install.github("JaydenM-C/phonfreq")
+devtools::install_github("JaydenM-C/phonfreq")
 ```
 
 Unfortunately, the package is very large (500MB) owing to the large size
